@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 
 internal class SolutionTest {
-    var solution: Solution = Solution()
+    private var solution: Solution = Solution()
     @Test
     fun given_allSuitAreSame_should_return_flush() {
         assertEquals("Flush", solution.bestHand(intArrayOf(1, 2, 3, 4, 5), charArrayOf('a', 'a', 'a', 'a', 'a')))

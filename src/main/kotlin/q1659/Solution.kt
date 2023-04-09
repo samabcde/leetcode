@@ -1,16 +1,19 @@
 package q1659
 
+import kotlin.math.pow
+
 class Solution {
     enum class LivingState(val initial: Int, val neighbourChange: Int) {
         INTROVERT(120, -30),
-        EXTRAVERT(40, 20),
+        EXTROVERT(40, 20),
         EMPTY(0, 0);
     }
 
     //    Constraints:
     //    1 <= m, n <= 5
     //    0 <= introvertsCount, extrovertsCount <= min(m * n, 6)
-    //
+    //    5,5,6,6
+    //    given last row calculate optimal for this row?
     //    put all may be not optimal
     //    |I|I|I|
     //    -------    -> 120 * 6 - 60 * 4 - 90 * 2 = 300
@@ -45,55 +48,75 @@ class Solution {
     //    2. only extroverts
     //    3. both introverts and extroverts
     fun getMaxGridHappiness(m: Int, n: Int, introvertsCount: Int, extrovertsCount: Int): Int {
-        val width = m
-        val height = n
-        val rooms = Array(n) { Array(m) { LivingState.EMPTY } }
-        var maxHappiness = 0
-        val roomNum = m * n
-        val maximumNumberOfPeopleWithNoNeighbour = (if (roomNum.mod(2) == 0) roomNum else roomNum + 1) / 2
-        for (i in 0..introvertsCount) {
-            for (j in maximumNumberOfPeopleWithNoNeighbour - introvertsCount..(m * n - i).coerceAtMost(extrovertsCount)) {
-                maxHappiness = maxHappiness.coerceAtLeast(findMax(m, n, i, j))
-            }
-        }
-        //
+//        val width = m
+//        val height = n
+//        val rooms = Array(m) { Array(n) { LivingState.EMPTY } }
+//        var maxHappiness = 0
+//        val roomNum = m * n
+//        val maximumNumberOfPeopleWithNoNeighbour = (if (roomNum.mod(2) == 0) roomNum else roomNum + 1) / 2
+//        for (i in 0..introvertsCount) {
+//            for (j in maximumNumberOfPeopleWithNoNeighbour - introvertsCount..(m * n - i).coerceAtMost(extrovertsCount)) {
+//                maxHappiness = maxHappiness.coerceAtLeast(findMax(m, n, i, j))
+//            }
+//        }
 //        return maxHappiness
-
-//        var lastRow = MutableList(n) { LivingState.EMPTY }
-        var memory = Array(introvertsCount) {
-            Array(extrovertsCount) {
-                Array(Math.pow(n.toDouble(), 3.0).toInt()) {
-                    -1
-                }
-            }
-        }
-//        maxHappiness = maxRow(m, n, 0, introvertsCount, extrovertsCount, 0, memory)
-        var lastRows = listOf(0)
-        for (i in 0 until m) {
-            var result = maxRow(m, n, 0, introvertsCount, extrovertsCount, lastRows, memory)
-            maxHappiness = result[0]
-
-        }
-        return maxHappiness
+        return maxStartFrom(m, n, 0, introvertsCount, extrovertsCount, List(n) { LivingState.EMPTY }, mutableMapOf())
     }
 
-    fun maxRow(
+
+    fun calculateScore(up: LivingState, left: LivingState, current: LivingState): Int {
+        val neighbour = (if (up == LivingState.EMPTY) 0 else 1) + (if (left == LivingState.EMPTY) 0 else 1)
+        return current.initial + (neighbour * current.neighbourChange) +
+                if (current == LivingState.EMPTY) 0
+                else up.neighbourChange + left.neighbourChange
+    }
+
+    private fun maxStartFrom(
         m: Int,
         n: Int,
-        rowIndex: Int,
+        index: Int,
         introvertsCount: Int,
         extrovertsCount: Int,
-        lastRows: List<Int>,
-        memory: Array<Array<Array<Int>>>
-    ): (List<Int>) {
-        var max = 0;
-        for (i in 0 until Math.pow(n.toDouble(), 3.0).toInt()) {
-            var current = 0
-
-//            var nextToLast = maxRow(m, n, rowIndex + 1, introvertsCount, extrovertsCount, lastRow)
-//            max = max.coerceAtLeast(current + nextToLast)
+        lastN: List<LivingState>,
+        memory: MutableMap<String, Int>
+    ): Int {
+        if ((introvertsCount == 0 && extrovertsCount == 0) || index == m * n) return 0
+        val key = "${lastN}|$index|$introvertsCount|$extrovertsCount"
+        if (memory.containsKey(key)) {
+            return memory[key]!!
         }
-        return emptyList()
+        val row = index / n
+        val col = index % n
+        val up = if (row == 0) LivingState.EMPTY else lastN[0]
+        val left = if (col == 0) LivingState.EMPTY else lastN[n - 1]
+        val introvertScore = if (introvertsCount > 0) {
+            calculateScore(up, left, LivingState.INTROVERT) + maxStartFrom(
+                m, n, index + 1, introvertsCount - 1, extrovertsCount, lastN.drop(1) + LivingState.INTROVERT, memory
+            )
+        } else 0
+        val extrovertScore = if (extrovertsCount > 0) {
+            calculateScore(up, left, LivingState.EXTROVERT) + maxStartFrom(
+                m, n, index + 1, introvertsCount, extrovertsCount - 1, lastN.drop(1) + LivingState.EXTROVERT, memory
+            )
+        } else 0
+        val spaceScore = maxStartFrom(
+            m, n, index + 1, introvertsCount, extrovertsCount, lastN.drop(1) + LivingState.EMPTY, memory
+        )
+//        println("$introvertScore $extrovertScore $spaceScore $index $introvertsCount")
+        val max = maxOf(introvertScore, extrovertScore, spaceScore)
+        memory[key] = max
+        return max
+    }
+
+    fun toRow(i: Int, n: Int): Array<LivingState> {
+        return Array(n) { index ->
+            when (i.div(3.0.pow((index - 1).toDouble())).toInt().mod(3)) {
+                0 -> LivingState.EMPTY
+                1 -> LivingState.EXTROVERT
+                2 -> LivingState.INTROVERT
+                else -> throw IllegalArgumentException("not possible")
+            }
+        }
     }
 
     fun calculateHappiness(lastRow: List<LivingState>, currentRow: List<LivingState>) {
@@ -202,9 +225,9 @@ class Solution {
             numOfExtrovertNeighbour = maxNeighbourOfExtrovert
         }
         return (LivingState.INTROVERT.initial * introvertsCount
-                + LivingState.EXTRAVERT.initial * extrovertsCount
+                + LivingState.EXTROVERT.initial * extrovertsCount
                 + LivingState.INTROVERT.neighbourChange * numOfIntrovertNeighbour
-                + LivingState.EXTRAVERT.neighbourChange * numOfExtrovertNeighbour)
+                + LivingState.EXTROVERT.neighbourChange * numOfExtrovertNeighbour)
     }
 
     data class Point(val x: Int, val y: Int) {

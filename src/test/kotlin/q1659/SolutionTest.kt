@@ -24,7 +24,7 @@ internal class SolutionTest {
 
         @Test
         fun given_singleRoomIsExtrovert_when_calculateHappiness_should_return40() {
-            assertEquals(40, solution.calculateHappiness(arrayOf(arrayOf(EXTRAVERT))))
+            assertEquals(40, solution.calculateHappiness(arrayOf(arrayOf(EXTROVERT))))
         }
 
         @Test
@@ -207,6 +207,43 @@ internal class SolutionTest {
                 Arguments.of(3, 3, 1, mapOf(Pair(0, 1), Pair(1, 0), Pair(2, 0), Pair(3, 0), Pair(4, 0))),
                 Arguments.of(3, 3, 6, mapOf(Pair(0, 2), Pair(1, 3), Pair(2, 0), Pair(3, 1), Pair(4, 0))),
                 Arguments.of(3, 3, 9, mapOf(Pair(0, 0), Pair(1, 0), Pair(2, 4), Pair(3, 4), Pair(4, 1))),
+            )
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class GetMaxGridHappiness {
+        @ParameterizedTest
+        @MethodSource("testCases")
+        fun given_input_should_return_expected(
+            m: Int,
+            n: Int,
+            introvertsCount: Int,
+            extrovertsCount: Int,
+            expected: Int,
+        ) {
+            assertEquals(expected, solution.getMaxGridHappiness(m, n, introvertsCount, extrovertsCount))
+        }
+
+        fun testCases(): List<Arguments> {
+            return listOf(
+                Arguments.of(1, 1, 0, 0, 0),
+                Arguments.of(1, 1, 1, 0, 120),
+                Arguments.of(1, 2, 2, 0, 180),
+                Arguments.of(3, 2, 3, 0, 360),
+                Arguments.of(3, 2, 4, 0, 360),
+                Arguments.of(3, 2, 5, 0, 360),
+                Arguments.of(3, 2, 6, 0, 360),
+                Arguments.of(1, 1, 0, 1, 40),
+                Arguments.of(1, 2, 0, 2, 120),
+                Arguments.of(3, 2, 0, 3, 200),
+                Arguments.of(3, 2, 0, 4, 320),
+                Arguments.of(3, 2, 0, 5, 400),
+                Arguments.of(3, 2, 0, 6, 520),
+                Arguments.of(5, 5, 6, 6, 1240),
+                Arguments.of(3, 3, 6, 0, 600),
+                Arguments.of(3, 3, 3, 3, 550),
             )
         }
     }

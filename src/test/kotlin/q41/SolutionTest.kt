@@ -1,7 +1,7 @@
 package q41
 
-import org.junit.Test
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 internal class SolutionTest {
     var solution = Solution()
